@@ -1,0 +1,10 @@
+{ 
+	"name": "Koken Typography",
+	"version": "1.0",
+	"description": "Uses the PHP-Typography class by Jeff King to greatly improve web typography.",
+	"demo": "http://kingdesk.com/projects/php-typography/",
+	"author": {
+		"name": "Gabriel Jeffrey",
+		"link": "http://gabrieljeffrey.com"
+	}
+}
