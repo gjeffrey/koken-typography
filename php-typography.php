@@ -1395,7 +1395,7 @@ class phpTypography {
 	function smart_ordinal_suffix($parsedHTMLtoken) {
 		if(!isset($this->settings["smartOrdinalSuffix"]) || !$this->settings["smartOrdinalSuffix"]) return $parsedHTMLtoken;
 
-		$parsedHTMLtoken["value"] = preg_replace("/\b(\d+)(er|e|eme|ème|nde|ère|st|nd|rd|th)\b/", '$1'.'<sup>$2</sup>', $parsedHTMLtoken["value"]);
+		$parsedHTMLtoken["value"] = preg_replace("/\b(\d+)(st|nd|rd|th)\b/", '$1'.'<sup>$2</sup>', $parsedHTMLtoken["value"]);
 
 		return $parsedHTMLtoken;
 	}
