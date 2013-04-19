@@ -9,6 +9,7 @@ class GJTypography extends KokenPlugin {
 	{
 		include('php-typography.php');
 		$typo = new phpTypography();
+		$typo->set_hyphenation(FALSE);
 		$html = $typo->process($html);
 		
 		return $html;
