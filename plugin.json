@@ -1,7 +1,7 @@
 { 
-	"name": "Koken Typography",
-	"version": "1.0",
-	"description": "Uses the PHP-Typography class by Jeff King to greatly improve web typography.",
+	"name": "Koken Typography with french support",
+	"version": "1.1",
+	"description": "Uses the PHP-Typography class by Jeff King to greatly improve web typography. Functionality added for french punctuation support",
 	"demo": "http://kingdesk.com/projects/php-typography/",
 	"author": {
 		"name": "Gabriel Jeffrey",
