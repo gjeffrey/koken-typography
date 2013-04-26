@@ -2,7 +2,7 @@
 /*
 	Project: PHP Typography
 	Project URI: http://kingdesk.com/projects/php-tyography/
-	Version: 1.21
+	Version: 1.23
 
 
 	Copyright 2009, KINGdesk, LLC. Licensed under the GNU General Public License 2.0. If you use, modify and/or redistribute this software, you must leave the KINGdesk, LLC copyright information, the request for a link to http://kingdesk.com, and the web design services contact information unchanged. If you redistribute this software, or any derivative, it must be released under the GNU General Public License 2.0. This program is distributed without warranty (implied or otherwise) of suitability for any particular purpose. See the GNU General Public License for full license terms <http://creativecommons.org/licenses/GPL/2.0/>.
@@ -1378,7 +1378,7 @@ class phpTypography {
 			$pat = "/
 				(?<=\A|\s|$nbsp|$nbnsp)																# lookbehind assertion: makes sure we are not messing up a url
 				(\d+)
-				(?:\s?\/\s?".$this->chr["zeroWidthSpace"].")										# strip out any zero-width spaces inserted by wrap_hard_hyphens
+				(?:\s?\/\s?".$this->chr["zeroWidthSpace"]."?)										# strip out any zero-width spaces inserted by wrap_hard_hyphens
 				(\d+)
 				(
 					(?:\<sup\>(?:st|nd|rd|th)<\/sup\>)?												# handle ordinals after fractions
@@ -1674,8 +1674,9 @@ class phpTypography {
 				if(isset($this->settings["hyphenHardWrap"]) && $this->settings["hyphenHardWrap"]) {
 					$hyphens = array('-',$this->chr["hyphen"]);
 					$parsedTextToken["value"] = str_replace($hyphens, "-".$this->chr["zeroWidthSpace"], $parsedTextToken["value"]);
+					//comment/uncomment for add a zeroWidthSpace after underscore and slashes, not very convenient 
 					$parsedTextToken["value"] = str_replace("_", "_".$this->chr["zeroWidthSpace"], $parsedTextToken["value"]);
-					$parsedTextToken["value"] = str_replace("/", "/".$this->chr["zeroWidthSpace"], $parsedTextToken["value"]);
+					//$parsedTextToken["value"] = str_replace("/", "/".$this->chr["zeroWidthSpace"], $parsedTextToken["value"]);
 				}
 				if(isset($this->settings["smartDashes"]) && $this->settings["smartDashes"]) // handled here because we need to know we are inside a word and not a url
 					$parsedTextToken["value"] = str_replace("-", $this->chr["hyphen"], $parsedTextToken["value"]);
