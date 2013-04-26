@@ -2,7 +2,7 @@
 /*
 	Project: PHP Typography
 	Project URI: http://kingdesk.com/projects/php-tyography/
-	Version: 1.21
+	Version: 1.23
 
 
 	Copyright 2009, KINGdesk, LLC. Licensed under the GNU General Public License 2.0. If you use, modify and/or redistribute this software, you must leave the KINGdesk, LLC copyright information, the request for a link to http://kingdesk.com, and the web design services contact information unchanged. If you redistribute this software, or any derivative, it must be released under the GNU General Public License 2.0. This program is distributed without warranty (implied or otherwise) of suitability for any particular purpose. See the GNU General Public License for full license terms <http://creativecommons.org/licenses/GPL/2.0/>.
@@ -103,6 +103,7 @@ class phpTypography {
 		$this->set_single_character_word_spacing();
 		$this->set_fraction_spacing();
 		$this->set_unit_spacing();
+		$this->set_punctuation_spacing();
 		$this->set_units();
 		$this->set_dash_spacing();
 		$this->set_dewidow();
@@ -491,6 +492,12 @@ class phpTypography {
 		$this->settings["unitSpacing"] = $on;
 		return TRUE;
 	}
+	
+	// words and punctuation are kept together with insertion of &nbsp;
+	function set_punctuation_spacing($on = TRUE) {
+		$this->settings["punctuationSpacing"] = $on;
+		return TRUE;
+	}
 
 	// a list of units to keep with their values
 	function set_units($units = array()) {
@@ -802,6 +809,7 @@ class phpTypography {
 			$unlockedText = $this->single_character_word_spacing($unlockedText);
 			$unlockedText = $this->dash_spacing($unlockedText);
 			$unlockedText = $this->unit_spacing($unlockedText);
+			$unlockedText = $this->punctuation_spacing($unlockedText);
 
 			//break it down for a bit more granularity
 			$this->parsedText = new parseText();
@@ -1370,7 +1378,7 @@ class phpTypography {
 			$pat = "/
 				(?<=\A|\s|$nbsp|$nbnsp)																# lookbehind assertion: makes sure we are not messing up a url
 				(\d+)
-				(?:\s?\/\s?".$this->chr["zeroWidthSpace"].")										# strip out any zero-width spaces inserted by wrap_hard_hyphens
+				(?:\s?\/\s?".$this->chr["zeroWidthSpace"]."?)										# strip out any zero-width spaces inserted by wrap_hard_hyphens
 				(\d+)
 				(
 					(?:\<sup\>(?:st|nd|rd|th)<\/sup\>)?												# handle ordinals after fractions
@@ -1395,7 +1403,7 @@ class phpTypography {
 	function smart_ordinal_suffix($parsedHTMLtoken) {
 		if(!isset($this->settings["smartOrdinalSuffix"]) || !$this->settings["smartOrdinalSuffix"]) return $parsedHTMLtoken;
 
-		$parsedHTMLtoken["value"] = preg_replace("/\b(\d+)(st|nd|rd|th)\b/", '$1'.'<sup>$2</sup>', $parsedHTMLtoken["value"]);
+		$parsedHTMLtoken["value"] = preg_replace("/\b(\d+)(ere?|e|eme|ème|nde?|re|ère|st|rd|th)\b/", '$1'.'<sup>$2</sup>', $parsedHTMLtoken["value"]);
 
 		return $parsedHTMLtoken;
 	}
@@ -1549,12 +1557,12 @@ class phpTypography {
 			\x{3000}		# ideographic space
 			'; // required modifiers: x (multiline pattern) i (case insensitive) u (utf8)
 
-		// normal spacing
-	    $parsedHTMLtoken["value"] = preg_replace(
-			"/\s+/xu", 
-			" ", 
-			$parsedHTMLtoken["value"]
-			);
+		// normal spacing : uncomment the block below if your php server is > 5.3.4
+	  //   $parsedHTMLtoken["value"] = preg_replace(
+			// "/\s+/xu", 
+			// " ", 
+			// $parsedHTMLtoken["value"]
+			// );
 		
 		// nbsp get's priority.  if nbsp exists in a string of spaces, it collapses to nbsp
 	    $parsedHTMLtoken["value"] = preg_replace(
@@ -1615,7 +1623,7 @@ class phpTypography {
 			(?:p|µ|[mcdhkMGT])?
 			(?:[mgstAKNJWCVFSTHBL]|mol|cd|rad|Hz|Pa|Wb|lm|lx|Bq|Gy|Sv|kat|Ω|Ohm|&Omega;|&\#0*937;|&\#[xX]0*3[Aa]9;)|
 			(?:nano|micro|milli|centi|deci|deka|hecto|kilo|mega|giga|tera)?
-			(?:liters?|meters?|grams?|newtons?|pascals?|watts?|joules?|amperes?)|
+			(?:liters?|meters?|grams?|newtons?|pascals?|watts?|joules?|amperes?|mètres?)|
 
 			### Computers units (KB, Kb, TB, Kbps)
 			[kKMGT]?(?:[oBb]|[oBb]ps|flops)|
@@ -1628,8 +1636,34 @@ class phpTypography {
 			%|pi|M?px|em|en|[NSEOW]|[NS][EOW]|mbar
 
 		'; // required modifiers: x (multiline pattern)
+		
+		$parsedHTMLtoken["value"] = preg_replace("/(\d\.?)\s?($unitPattern)\b/x", '$1'.$this->chr["noBreakNarrowSpace"].'$2', $parsedHTMLtoken["value"]);
+		
+		return $parsedHTMLtoken;
+	}
+	
+	//expecting parsedHTML token of type text
+	function punctuation_spacing($parsedHTMLtoken) {
+		if(!isset($this->settings["punctuationSpacing"]) || !$this->settings["punctuationSpacing"]) return $parsedHTMLtoken;
+		
+		$punctuations = array();
+		if(isset($this->settings["punctuations"])) {
+			foreach($this->settings["punctuations"] as $punctuation) {
+				$punctuations[] = preg_replace("#([\[\\\^\$\.\|\?\*\+\(\)\{\}])#", "\\\\$1", $punctuation ); // escape special chrs
+			}
+		}
+		
+		$customPunctuations = implode("|", $punctuations);
+		$customPunctuations .= ($customPunctuations) ? "|" : "" ;
+		$punctuationPattern = $customPunctuations.'
 
-		$parsedHTMLtoken["value"] = preg_replace("/(\d\.?)\s($unitPattern)\b/x", '$1'.$this->chr["noBreakNarrowSpace"].'$2', $parsedHTMLtoken["value"]);
+			### Punctuations mark
+			!|&lt;|&gt;|\?|:|%|‰
+
+		'; // required modifiers: x (multiline pattern)
+		
+		$parsedHTMLtoken["value"] = preg_replace("/(\w?)\s?($punctuationPattern)/x", '$1'.$this->chr["noBreakNarrowSpace"].'$2', $parsedHTMLtoken["value"]);
+		
 		return $parsedHTMLtoken;
 	}
 
@@ -1640,8 +1674,9 @@ class phpTypography {
 				if(isset($this->settings["hyphenHardWrap"]) && $this->settings["hyphenHardWrap"]) {
 					$hyphens = array('-',$this->chr["hyphen"]);
 					$parsedTextToken["value"] = str_replace($hyphens, "-".$this->chr["zeroWidthSpace"], $parsedTextToken["value"]);
+					//comment/uncomment for add a zeroWidthSpace after underscore and slashes, not very convenient 
 					$parsedTextToken["value"] = str_replace("_", "_".$this->chr["zeroWidthSpace"], $parsedTextToken["value"]);
-					$parsedTextToken["value"] = str_replace("/", "/".$this->chr["zeroWidthSpace"], $parsedTextToken["value"]);
+					//$parsedTextToken["value"] = str_replace("/", "/".$this->chr["zeroWidthSpace"], $parsedTextToken["value"]);
 				}
 				if(isset($this->settings["smartDashes"]) && $this->settings["smartDashes"]) // handled here because we need to know we are inside a word and not a url
 					$parsedTextToken["value"] = str_replace("-", $this->chr["hyphen"], $parsedTextToken["value"]);
@@ -1961,7 +1996,7 @@ class phpTypography {
 					// assume page title is h2
 					$immediateParent = array("tagName" => "h2");
 				}
-				if($immediateParent["tagName"]) {
+				if(isset($immediateParent["tagName"])) {
 					foreach($this->settings["initialQuoteTags"] as $tag) {
 						if($tag == $immediateParent["tagName"])
 							$style = TRUE;
