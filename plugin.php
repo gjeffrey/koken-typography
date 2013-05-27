@@ -10,8 +10,8 @@ class GJTypography extends KokenPlugin {
 		include('php-typography.php');
 		$typo = new phpTypography();
 
-		//ignore php-typo on this class. you can add noTypo class to your elements for avoiding typography modifications
-		$typo->set_classes_to_ignore("vcard", "noTypo");
+		//ignore php-typo on this class. you can add notypo class to your elements for avoiding typography modifications
+		$typo->set_classes_to_ignore($classNames = array("vcard","notypo"));
 
 		//words with more than (x) letters can be alone on a new line
 		$typo->set_max_dewidow_length(10);
